@@ -1,0 +1,6 @@
+print("\\")
+print("\"")
+print("FETEL\tFaculty Electronics And Telecommunications")
+print("\n")
+print("DTVT Dien Tu Vien Thong",end=" - ")
+print("Nhap Mon Ky Thuat")

@@ -1,0 +1,76 @@
+#include <Arduino.h>
+#include <SimpleTimer.h>
+
+#define BLYNK_TEMPLATE_ID "TMPL6B26wMubB"
+#define BLYNK_TEMPLATE_NAME "DesLab"
+#define BLYNK_FIRMWARE_VERSION        "0.1.0"
+#define BLYNK_PRINT Serial
+//#define BLYNK_DEBUG
+
+#define APP_DEBUG
+
+// Uncomment your board, or configure a custom board in Settings.h
+//#define USE_SPARKFUN_BLYNK_BOARD
+#define USE_NODE_MCU_BOARD
+//#define USE_WITTY_CLOUD_BOARD
+//#define USE_WEMOS_D1_MINI
+
+#include "../examples/Blynk.Edgent/Edgent_ESP8266/BlynkEdgent.h"
+#include "DHT.h"
+// Button
+#define LED 4 // D2
+#define button 14 // D5
+boolean bt_state = HIGH;
+
+BLYNK_WRITE(V0) {
+  int p = param.asInt();
+  digitalWrite(LED, p);
+}
+// DHT11
+#define DHTPin 12
+#define DHTTYPE DHT11   // DHT 11
+DHT dht(DHTPin, DHTTYPE);
+SimpleTimer timer;
+
+void sendUptime() {  
+  float humidity = dht.readHumidity();
+  float temperature = dht.readTemperature();
+      // Xuất ra Serial
+  Serial.println("Humidity and temperature\n\n");  
+  Serial.print("Current humidity = ");  
+  Serial.print(humidity);  
+  Serial.print("%  ");  
+  Serial.print("temperature = ");  
+  Serial.print(temperature);  
+  Blynk.virtualWrite(V1, temperature);   // Trao đổi dữ liệu nhiệt độ với Blynk         
+  Blynk.virtualWrite(V2, humidity);  // Trao đổi dữ liệu độ ẩm với Blynk 
+}
+
+void setup()
+{
+  Serial.begin(9600);
+  delay(100);
+  BlynkEdgent.begin();
+  // Button
+  pinMode(LED, OUTPUT);
+  pinMode(button, INPUT_PULLUP);
+  // DHT11
+  dht.begin();
+  timer.setInterval(2000, sendUptime); 
+}
+
+void loop() {
+  BlynkEdgent.run(); // Run Blynk
+  timer.run(); // Read Temperature, Humidity
+  // Button
+  if(digitalRead(button) == LOW) {
+    if(bt_state == HIGH) {
+      digitalWrite(LED, !digitalRead(LED));
+      Blynk.virtualWrite(V0, digitalRead(LED));
+      bt_state = LOW;
+      delay(200);
+    } else {
+      bt_state = HIGH;
+    }
+  }
+}
